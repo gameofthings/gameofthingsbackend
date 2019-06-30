@@ -43,36 +43,48 @@ function createGameStartEvents(socket, io) {
         console.log('New game being created');
         let gameId = generateGameId(6);
 
-        let NewGame = new Game({
-            gameId: gameId,
-            gameState: GameStates.LOBBY,
-            turn: 1,
-            topic: '',
-            gameHead: name,
-            voter: name
-        })
-
-        NewGame.save((err) => {
+        Game.findOne({ gameId: gameId }, (err, game) => {
             if (err) {
                 socket.emit(OutboundEvents.BACKEND_ERROR, err);
                 return;
             }
-            addPlayerToGame(gameId, name, name, true, 0, (err) => {
-                if (err) {
-                    socket.emit(OutboundEvents.BACKEND_ERROR, err);
-                    return;
-                }
-                console.log('added player ' + name + ' to game ' + gameId);
-                socket.join(gameId);
+            if (game == null) {
+                let NewGame = new Game({
+                    gameId: gameId,
+                    gameState: GameStates.LOBBY,
+                    turn: 1,
+                    topic: '',
+                    gameHead: name,
+                    voter: name
+                })
 
-                info.getGameInfo(gameId, (gameInfo) => {
-                    info.getPlayerInfo(gameId, (playerInfo) => {
-                        socket.emit(OutboundEvents.ADDED_TO_GAME, gameInfo, playerInfo);
-                        socket.to(gameId).emit(OutboundEvents.PLAYERS_UPDATE, playerInfo);
+                NewGame.save((err) => {
+                    if (err) {
+                        socket.emit(OutboundEvents.BACKEND_ERROR, err);
+                        return;
+                    }
+                    addPlayerToGame(gameId, name, name, true, 0, (err) => {
+                        if (err) {
+                            socket.emit(OutboundEvents.BACKEND_ERROR, err);
+                            return;
+                        }
+                        console.log('added player ' + name + ' to game ' + gameId);
+                        socket.join(gameId);
+
+                        info.getGameInfo(gameId, (gameInfo) => {
+                            info.getPlayerInfo(gameId, (playerInfo) => {
+                                socket.emit(OutboundEvents.ADDED_TO_GAME, gameInfo, playerInfo);
+                                socket.to(gameId).emit(OutboundEvents.PLAYERS_UPDATE, playerInfo);
+                            });
+                        });
                     });
                 });
-            });
-        });
+            }
+            else {
+                socket.emit(OutboundEvents.GAME_ID_ERROR, gameId);
+                return;
+            }
+        })
     });
 
     socket.on(InboundEvents.JOIN_GAME, (gameId, name) => {
@@ -93,12 +105,12 @@ function createGameStartEvents(socket, io) {
                 socket.emit(OutboundEvents.GAME_IN_PROGRESS, gameId);
                 return;
             }
-            DisconnectedPlayer.findOne({gameId:gameId, name:name}, (err, disPlayer) => {
-                if(err){
+            DisconnectedPlayer.findOne({ gameId: gameId, name: name }, (err, disPlayer) => {
+                if (err) {
                     socket.emit(OutboundEvents.BACKEND_ERROR, err);
                     return;
                 }
-                if(disPlayer == null){
+                if (disPlayer == null) {
                     Player.findOne({ gameId: gameId, name: name }, (err, player) => {
                         if (err) {
                             socket.emit(OutboundEvents.BACKEND_ERROR, err);
@@ -110,17 +122,17 @@ function createGameStartEvents(socket, io) {
                         }
                         Player.findOne({ gameId: gameId, tail: true }, (err, tail) => {
                             if (err) {
-                                socket.emit(OutboundEvents.BACKEND_ERROR, {error:'finding tail'});
+                                socket.emit(OutboundEvents.BACKEND_ERROR, { error: 'finding tail' });
                                 return;
                             }
                             addPlayerToGame(gameId, name, tail.next, true, 0, (err) => {
                                 if (err) {
-                                    socket.emit(OutboundEvents.BACKEND_ERROR, {error:'adding to game'});
+                                    socket.emit(OutboundEvents.BACKEND_ERROR, { error: 'adding to game' });
                                     return;
                                 }
                                 Player.updateOne({ gameId: gameId, name: tail.name }, { next: name, tail: false }, (err, res) => {
                                     if (err) {
-                                        socket.emit(OutboundEvents.BACKEND_ERROR, );
+                                        socket.emit(OutboundEvents.BACKEND_ERROR);
                                         return;
                                     }
                                     console.log('added player ' + name + ' to game ' + gameId);
@@ -136,32 +148,38 @@ function createGameStartEvents(socket, io) {
                         })
                     });
                 }
-                else{
-                    Player.findOne({ gameId: gameId, tail: true }, (err, tail) => {
+                else {
+                    DisconnectedPlayer.deleteOne({ gameId: gameId, name: name }, (err, res) => {
                         if (err) {
-                            socket.emit(OutboundEvents.BACKEND_ERROR, {error:'finding tail'});
+                            socket.emit(OutboundEvents.BACKEND_ERROR, err);
                             return;
                         }
-                        addPlayerToGame(gameId, name, tail.next, true, disPlayer.points, (err) => {
+                        Player.findOne({ gameId: gameId, tail: true }, (err, tail) => {
                             if (err) {
-                                socket.emit(OutboundEvents.BACKEND_ERROR, {error:'adding to game'});
+                                socket.emit(OutboundEvents.BACKEND_ERROR, { error: 'finding tail' });
                                 return;
                             }
-                            Player.updateOne({ gameId: gameId, name: tail.name }, { next: name, tail: false }, (err, res) => {
+                            addPlayerToGame(gameId, name, tail.next, true, disPlayer.points, (err) => {
                                 if (err) {
-                                    socket.emit(OutboundEvents.BACKEND_ERROR, );
+                                    socket.emit(OutboundEvents.BACKEND_ERROR, { error: 'adding to game' });
                                     return;
                                 }
-                                console.log('added player ' + name + ' to game ' + gameId);
-                                socket.join(gameId);
-                                info.getGameInfo(gameId, (gameInfo) => {
-                                    info.getPlayerInfo(gameId, (playerInfo) => {
-                                        socket.emit(OutboundEvents.ADDED_TO_GAME, gameInfo, playerInfo);
-                                        socket.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
+                                Player.updateOne({ gameId: gameId, name: tail.name }, { next: name, tail: false }, (err, res) => {
+                                    if (err) {
+                                        socket.emit(OutboundEvents.BACKEND_ERROR);
+                                        return;
+                                    }
+                                    console.log('added player ' + name + ' to game ' + gameId);
+                                    socket.join(gameId);
+                                    info.getGameInfo(gameId, (gameInfo) => {
+                                        info.getPlayerInfo(gameId, (playerInfo) => {
+                                            socket.emit(OutboundEvents.ADDED_TO_GAME, gameInfo, playerInfo);
+                                            socket.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
+                                        });
                                     });
-                                });
-                            })
-                        });
+                                })
+                            });
+                        })
                     })
                 }
             })
