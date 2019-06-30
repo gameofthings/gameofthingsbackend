@@ -69,24 +69,24 @@ function createGameDisconnectEvents(socket, io) {
                                 });
                                 return;
                             }
-                            const NewDisconnectedPlayer = new DisconnectedPlayer({
-                                gameId: game.gameId,
-                                name: player.name,
-                                points: player.points
-                            });
-                            NewDisconnectedPlayer.save((err) => {
-                                Player.deleteOne({ gameId: game.gameId, name: player.name }, (err, res) => {
-                                    if (err) {
-                                        info.getPlayerInfo(game.gameId, (playerInfo) => {
-                                            info.getGameInfo(game.gameId, (gameInfo) => {
-                                                io.to(game.gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
-                                            });
+                            Player.deleteOne({ gameId: game.gameId, name: player.name }, (err, res) => {
+                                if (err) {
+                                    info.getPlayerInfo(game.gameId, (playerInfo) => {
+                                        info.getGameInfo(game.gameId, (gameInfo) => {
+                                            io.to(game.gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
                                         });
-                                        return;
-                                    }
-                                    deleteGameMaybe(game.gameId, (err, deleted) => {
-                                        if (err) return;
-                                        if (!deleted) {
+                                    });
+                                    return;
+                                }
+                                deleteGameMaybe(game.gameId, (err, deleted) => {
+                                    if (err) return;
+                                    if (!deleted) {
+                                        let NewDisconnectedPlayer = new DisconnectedPlayer({
+                                            gameId: game.gameId,
+                                            name: player.name,
+                                            points: player.points
+                                        });
+                                        NewDisconnectedPlayer.save((err) => {
                                             Player.find({ gameId: game.gameId }, (err, players) => {
                                                 if (err) return;
                                                 if (players.length == 1) {
@@ -162,10 +162,10 @@ function createGameDisconnectEvents(socket, io) {
 
                                                 }
                                             });
-                                        }
-                                    });
+                                        })
+                                    }
                                 });
-                            })
+                            });
                         })
                     });
                 })
