@@ -23,6 +23,13 @@ app.use(express.urlencoded({ extended: true }))
 
 // const server = https.createServer(credentials, app);
 
+var https = require("https");
+setInterval(function() {
+    https.get('https://game-of-things.herokuapp.com/', (res)=>{
+        console.log('Ah, ha, ha, ha, stayin\' alive, stayin\' alive');
+    });
+}, 300000);
+
 const Game = require('./models/GameModel')();
 const Player = require('./models/PlayerModel')();
 

@@ -8,6 +8,7 @@ function createGameVoteEvents(socket, io) {
     const info = require('./getInfo');
 
     socket.on(InboundEvents.SUBMITTED_ANSWER, (gameId, name, answer) => {
+        answer = answer.trim();
         Player.updateOne({ gameId: gameId, name: name }, { state: PlayerStates.ANSWERED, answer: answer }, (err, res) => {
             if (err) {
                 socket.emit(OutboundEvents.BACKEND_ERROR, err);

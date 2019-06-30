@@ -8,7 +8,7 @@ function createGameSubmitTopicEvents(socket, io) {
     const info = require('./getInfo');
 
     socket.on(InboundEvents.SUBMITTED_TOPIC, (gameId, topic) => {
-
+        topic = topic.trim();
         Game.updateOne({ gameId: gameId }, { gameState: GameStates.ANSWERING, topic: topic }, (err, res) => {
             if (err) {
                 socket.emit(OutboundEvents.BACKEND_ERROR, err);
