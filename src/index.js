@@ -1,6 +1,6 @@
 const fs = require('fs');
 const express = require('express');
-const https = require('https');
+// const https = require('https');
 const cors = require('cors');
 
 const port = process.env.PORT || 3001;
@@ -16,12 +16,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
-let credentials = {
-    key: fs.readFileSync('./server.key'),
-    cert: fs.readFileSync('./server.crt')
-};
+// let credentials = {
+//     key: fs.readFileSync('./server.key'),
+//     cert: fs.readFileSync('./server.crt')
+// };
 
-const server = https.createServer(credentials, app);
+// const server = https.createServer(credentials, app);
 
 const Game = require('./models/GameModel')();
 const Player = require('./models/PlayerModel')();
@@ -33,8 +33,10 @@ app.get('/health', (req, res) => {
     return res.send('Up and running!');
 })
 
-server.listen(port, () => {
-    const io = require('socket.io')(server);
+app.listen(port, () => {
+    console.log('Started!');
+
+    const io = require('socket.io')(app);
 
     io.on('connection', (socket) => {
         try {
