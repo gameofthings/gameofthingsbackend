@@ -33,10 +33,10 @@ app.get('/health', (req, res) => {
     return res.send('Up and running!');
 })
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log('Started!');
 
-    const io = require('socket.io')(app);
+    const io = require('socket.io')(server);
 
     io.on('connection', (socket) => {
         try {
