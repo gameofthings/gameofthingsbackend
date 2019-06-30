@@ -19,7 +19,7 @@ function createGameStartEvents(socket, io) {
     const GameStates = require('../constants/GameStates');
     const Game = require('../models/GameModel')();
     const Player = require('../models/PlayerModel')();
-    const DisconnectedPlayer = require('../models/DisconnectedPlayer');
+    const DisconnectedPlayer = require('../models/DisconnectedPlayer')();
     const info = require('./getInfo');
 
     function addPlayerToGame(gameId, name, next, tail, points, callback) {
