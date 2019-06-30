@@ -29,6 +29,10 @@ const Player = require('./models/PlayerModel')();
 Game.deleteMany({}, (err, res) => { });
 Player.deleteMany({}, (err, res) => { });
 
+app.get('/health', (req, res) => {
+    return res.send('Up and running!');
+})
+
 server.listen(port, () => {
     const io = require('socket.io')(server);
 
