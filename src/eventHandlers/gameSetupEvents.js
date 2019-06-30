@@ -57,7 +57,7 @@ function createGameStartEvents(socket, io) {
                 socket.emit(OutboundEvents.BACKEND_ERROR, err);
                 return;
             }
-            addPlayerToGame(gameId, name, name, true, (err) => {
+            addPlayerToGame(gameId, name, name, true, 0, (err) => {
                 if (err) {
                     socket.emit(OutboundEvents.BACKEND_ERROR, err);
                     return;
