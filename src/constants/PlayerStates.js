@@ -1,0 +1,9 @@
+exports.LOBBY = 'lobby';
+exports.TOPIC = 'topic';
+exports.WAITING = 'waiting'
+exports.UNANSWERED = 'unanswered';
+exports.ANSWERED = 'answered';
+exports.INLINE = 'inline';
+exports.VOTING = 'voting';
+exports.OUT = 'out';
+exports.RESULTS = 'results';
