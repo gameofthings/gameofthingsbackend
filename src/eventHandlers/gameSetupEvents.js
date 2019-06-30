@@ -94,6 +94,10 @@ function createGameStartEvents(socket, io) {
                 return;
             }
             DisconnectedPlayer.findOne({gameId:gameId, name:name}, (err, disPlayer) => {
+                if(err){
+                    socket.emit(OutboundEvents.BACKEND_ERROR, err);
+                    return;
+                }
                 if(disPlayer == null){
                     Player.findOne({ gameId: gameId, name: name }, (err, player) => {
                         if (err) {
