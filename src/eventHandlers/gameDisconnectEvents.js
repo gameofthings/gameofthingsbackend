@@ -61,23 +61,9 @@ function createGameDisconnectEvents(socket, io) {
                             options.voter = toFixPlayer.name;
                         }
                         Game.updateOne({ gameId: game.gameId }, options, (err, res) => {
-                            if (err) {
-                                info.getPlayerInfo(game.gameId, (playerInfo) => {
-                                    info.getGameInfo(game.gameId, (gameInfo) => {
-                                        io.to(game.gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
-                                    });
-                                });
-                                return;
-                            }
+                            if (err) return;
                             Player.deleteOne({ gameId: game.gameId, name: player.name }, (err, res) => {
-                                if (err) {
-                                    info.getPlayerInfo(game.gameId, (playerInfo) => {
-                                        info.getGameInfo(game.gameId, (gameInfo) => {
-                                            io.to(game.gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
-                                        });
-                                    });
-                                    return;
-                                }
+                                if (err) return;
                                 deleteGameMaybe(game.gameId, (err, deleted) => {
                                     if (err) return;
                                     if (!deleted) {
@@ -147,6 +133,12 @@ function createGameDisconnectEvents(socket, io) {
                                                                                 });
                                                                             });
                                                                         })
+                                                                    });
+                                                                } else {
+                                                                    info.getPlayerInfo(game.gameId, (playerInfo) => {
+                                                                        info.getGameInfo(game.gameId, (gameInfo) => {
+                                                                            io.to(game.gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
+                                                                        });
                                                                     });
                                                                 }
                                                             }
