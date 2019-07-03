@@ -34,24 +34,18 @@ function createGameStateEvents(socket, io) {
                                     socket.emit(OutboundEvents.BACKEND_ERROR, err);
                                     return;
                                 }
-                                Game.updateOne({ gameId: gameId }, { gameHead: player.next, voter: player.next }, (err, res) => {
-                                    if (err) {
-                                        socket.emit(OutboundEvents.BACKEND_ERROR, err);
-                                        return;
-                                    }
-                                    info.getPlayerInfo(gameId, (playerInfo) => {
-                                        info.getGameInfo(gameId, (gameInfo) => {
-                                            io.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
-                                        });
+                                info.getPlayerInfo(gameId, (playerInfo) => {
+                                    info.getGameInfo(gameId, (gameInfo) => {
+                                        io.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
                                     });
-                                })
+                                });
                             })
                         })
                     })
                 });
             }
-            else{
-                socket.emit(OutboundEvents.NOT_ENOUGH_PLAYERS,players.length);
+            else {
+                socket.emit(OutboundEvents.NOT_ENOUGH_PLAYERS, players.length);
             }
         })
     });

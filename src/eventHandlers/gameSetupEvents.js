@@ -89,8 +89,8 @@ function createGameStartEvents(socket, io) {
 
     socket.on(InboundEvents.JOIN_GAME, (gameId, name) => {
         name = name.trim();
-        gameId = gameId.trim();
-        console.log('New connection joining game: ' + gameId)
+        gameId = gameId.trim().toLowerCase();
+        console.log('New connection joining game: ' + gameId);
 
         Game.findOne({ gameId: gameId }, (err, game) => {
             if (err) {

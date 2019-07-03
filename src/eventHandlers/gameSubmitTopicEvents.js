@@ -9,23 +9,35 @@ function createGameSubmitTopicEvents(socket, io) {
 
     socket.on(InboundEvents.SUBMITTED_TOPIC, (gameId, topic) => {
         topic = topic.trim();
-        Game.updateOne({ gameId: gameId }, { gameState: GameStates.ANSWERING, topic: topic }, (err, res) => {
+        Game.findOne({ gameId: gameId }, (err, game) => {
             if (err) {
                 socket.emit(OutboundEvents.BACKEND_ERROR, err);
                 return;
             }
-            Player.updateMany({ gameId: gameId }, { state: PlayerStates.UNANSWERED, answer: '' }, (err, res) => {
+            Player.findOne({ gameId: gameId, name: game.gameHead }, (err, player) => {
                 if (err) {
                     socket.emit(OutboundEvents.BACKEND_ERROR, err);
                     return;
                 }
-                info.getPlayerInfo(gameId, (playerInfo) => {
-                    info.getGameInfo(gameId, (gameInfo) => {
-                        io.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
-                    });
+                Game.updateOne({ gameId: gameId }, { gameHead: player.next, voter: player.next, gameState: GameStates.ANSWERING, topic: topic }, (err, res) => {
+                    if (err) {
+                        socket.emit(OutboundEvents.BACKEND_ERROR, err);
+                        return;
+                    }
+                    Player.updateMany({ gameId: gameId }, { state: PlayerStates.UNANSWERED, answer: '' }, (err, res) => {
+                        if (err) {
+                            socket.emit(OutboundEvents.BACKEND_ERROR, err);
+                            return;
+                        }
+                        info.getPlayerInfo(gameId, (playerInfo) => {
+                            info.getGameInfo(gameId, (gameInfo) => {
+                                io.to(gameId).emit(OutboundEvents.ALL_UPDATE, gameInfo, playerInfo);
+                            });
+                        });
+                    })
                 });
             })
-        });
+        })
     });
 }
 
